@@ -90,21 +90,3 @@ class DatabaseService:
     
     def is_connected(self) -> bool:
         return self.connection is not None
-    
-    def get_connection_info(self) -> dict:
-        if not self.connection:
-            return {"status": "disconnected"}
-        
-        try:
-            cursor = self.connection.cursor()
-            cursor.execute("SELECT USER, SYS_CONTEXT('USERENV', 'DB_NAME') FROM DUAL")
-            user, db_name = cursor.fetchone()
-            cursor.close()
-            
-            return {
-                "status": "connected",
-                "user": user,
-                "database": db_name
-            }
-        except:
-            return {"status": "unknown"}
