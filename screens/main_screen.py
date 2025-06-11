@@ -29,6 +29,7 @@ class MainScreen(Screen):
             size_hint_y=None,
             height=50,
             font_size=24
+            
         )
         main_layout.add_widget(title_label)
         

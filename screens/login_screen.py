@@ -21,8 +21,7 @@ class LoginScreen(Screen):
 
         title_label = Label(
             text='Conexão Oracle Database',
-            size_hint_y=None,
-            height=40,
+            height=10,
             font_size=28,
             bold=True
         )
@@ -36,15 +35,14 @@ class LoginScreen(Screen):
         
         self.status_label = Label(
             text='Preencha os dados para conectar',
-            size_hint_y=None,
-            height=40
+            height=10
         )
         main_layout.add_widget(self.status_label)
         
         self.add_widget(main_layout)
     
     def _create_form_layout(self):
-        form_layout = GridLayout(cols=2, spacing=10, size_hint_y=None)
+        form_layout = GridLayout(cols=2, spacing=10)
         form_layout.bind(minimum_height=form_layout.setter('height'))
         
         form_layout.add_widget(Label(text='Usuário:', size_hint_y=None, height=40))
@@ -106,7 +104,6 @@ class LoginScreen(Screen):
         return True
     
     def _get_connection_data(self):
-        """Retorna os dados de conexão dos campos"""
         return {
             'user': self.user_input.text.strip(),
             'password': self.password_input.text.strip(),

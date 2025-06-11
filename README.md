@@ -1,5 +1,26 @@
 ## POC - App Desktop Kivy
 
+Nesse projeto estou realizando um POC para testar a criação de uma aplicação Kivy para gerenciamento de banco de dados Oracle. Os seguintes pontos serão abordados:
+
+- Receber via parâmetros dados de conexão como usuário, host e senha do banco de dados
+- Conectar a um banco de dados Oracle com essas credenciais
+- Fazer uma consulta qualquer e exibir os dados
+- Gerar um executável que não precise de instalação
+
+---
+
+### Telas da aplicação
+
+##### Login
+
+![Tela de Login](./assets/login.png)
+
+##### Execução das queries
+
+![Tela principal](./assets/main.png)
+
+---
+
 ### Etapas para executar
 
 > Necessário ter o [python3](https://www.python.org/downloads/) e o [docker](https://docs.docker.com/engine/install/) instalados
@@ -48,6 +69,8 @@ python3 main.py
 - Usuário: system
 - Senha: MinhaSenh@123
 - Host: localhost:1521/FREE
+
+---
 
 ### Exemplos de scripts SQL
 

@@ -16,3 +16,9 @@ class OracleApp(App):
         sm.current = 'login'
         
         return sm
+    
+    def get_application_name(self):
+        return "Gerenciador de Banco de Dados Oracle"
+    
+    def get_application_version(self):
+        return "1.0.0"
