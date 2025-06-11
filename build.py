@@ -1,7 +1,6 @@
 import os
 import subprocess
 import shutil
-import sys
 
 def build_executable():    
     print("🔨 Iniciando build do executável pode demorar um pouco...")
@@ -10,19 +9,16 @@ def build_executable():
         shutil.rmtree("dist")
     if os.path.exists("build"):
         shutil.rmtree("build")
-    print(sys.platform)
-    
-    sep = ";" if sys.platform.startswith("win") else ":"
 
     cmd = [
         "pyinstaller",
         "--onefile",
         "--windowed",
         "--name=OracleDBManager",
-        f"--add-data=services{sep}services",
-        f"--add-data=screens{sep}screens",
-        f"--add-data=utils{sep}utils",
-        f"--add-data=widgets{sep}widgets",
+        "--add-data=services:services",
+        "--add-data=screens:screens",
+        "--add-data=utils:utils",
+        "--add-data=widgets:widgets",
         "--hidden-import=uuid",
         "--hidden-import=secrets",
         "--hidden-import=cryptography.hazmat.primitives.kdf.pbkdf2",

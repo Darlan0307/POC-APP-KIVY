@@ -1,6 +1,6 @@
 ## POC - App Desktop Kivy
 
-Nesse projeto estou realizando um POC para testar a criação de uma aplicação Kivy para gerenciamento de banco de dados Oracle. Os seguintes pontos serão abordados:
+Nesse projeto estou realizando uma POC para testar a criação de uma aplicação Kivy para gerenciamento de banco de dados Oracle. Os seguintes pontos serão abordados:
 
 - Receber via parâmetros dados de conexão como usuário, host e senha do banco de dados
 - Conectar a um banco de dados Oracle com essas credenciais
@@ -11,11 +11,11 @@ Nesse projeto estou realizando um POC para testar a criação de uma aplicação
 
 ### Telas da aplicação
 
-##### Login
+#### Login
 
 ![Tela de Login](./assets/login.png)
 
-##### Execução das queries
+#### Execução das queries
 
 ![Tela principal](./assets/main.png)
 
@@ -73,6 +73,14 @@ python3 main.py
 ---
 
 ### Criando arquivo de execução do app
+
+#### Windows
+
+```bash
+./build.bat # arquivo criado para automatizar o processo
+```
+
+#### Linux
 
 ```bash
 pthon3 build.py # arquivo criado para automatizar o processo
