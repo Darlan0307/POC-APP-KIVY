@@ -72,6 +72,14 @@ python3 main.py
 
 ---
 
+### Criando arquivo de execução do app
+
+```bash
+pthon3 build.py # arquivo criado para automatizar o processo
+```
+
+---
+
 ### Exemplos de scripts SQL
 
 ##### Criar tabela se não existir
