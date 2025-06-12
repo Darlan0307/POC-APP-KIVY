@@ -1,7 +1,7 @@
 import oracledb
 from typing import Tuple, Union, Any
 from utils.helpers import is_select_query
-
+from utils.logger import logger
 
 class DatabaseService:
     
@@ -17,6 +17,7 @@ class DatabaseService:
         
         except oracledb.Error as e:
             error_msg = str(e).split('\n')[0]
+            logger.error(f"Erro Oracle ao testar conexão: {str(e)}")
             return False, error_msg
         
         except Exception as e:
@@ -37,8 +38,6 @@ class DatabaseService:
             f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})(PORT={port}))(CONNECT_DATA=(SERVICE_NAME={service})))",
             f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})(PORT={port}))(CONNECT_DATA=(SID={service})))", 
         ]
-
-        print(dsn_formats)
         
         for i, dsn_format in enumerate(dsn_formats):
             try:
@@ -47,6 +46,7 @@ class DatabaseService:
                 connection.close()
                 return True, f"Sucesso com formato {i+1}: {dsn_format}"
             except oracledb.Error as e:
+                logger.error(f"Erro Oracle ao testar conexão com formato {i+1}: {dsn_format} - {str(e)}")
                 print(f"Falha no formato {i+1}: {e}")
                 continue
         
@@ -59,9 +59,11 @@ class DatabaseService:
         
         except oracledb.Error as e:
             error_msg = str(e).split('\n')[0]
+            logger.error(f"Erro Oracle ao tentar conectar: {str(e)}")
             return False, error_msg
         
         except Exception as e:
+            logger.error(f"Erro Oracle ao tentar conectar:: {str(e)}")
             return False, str(e)
     
     def set_connection(self, connection):
@@ -88,9 +90,11 @@ class DatabaseService:
         
         except oracledb.Error as e:
             error_msg = str(e).split('\n')[0]
+            logger.error(f"Erro Oracle ao tentar executar query:: {str(e)}")
             return False, error_msg
         
         except Exception as e:
+            logger.error(f"Erro Oracle ao tentar executar query:: {str(e)}")
             return False, str(e)
         
         finally:
