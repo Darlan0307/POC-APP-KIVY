@@ -93,8 +93,8 @@ pthon3 build.py # arquivo criado para automatizar o processo
 ##### Criar tabela se não existir
 
 ```sql
-CREATE TABLE IF NOT EXISTS departamentos (
-id NUMBER PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE departamentos (
+id NUMBER PRIMARY KEY,
 nome VARCHAR2(50) NOT NULL,
 gerente VARCHAR2(100),
 orcamento NUMBER(12,2)
@@ -105,7 +105,7 @@ orcamento NUMBER(12,2)
 
 ```sql
 
-INSERT INTO departamentos VALUES ('TI', 'João Silva', 500000.00)
+INSERT INTO departamentos VALUES (1,'TI', 'João Silva', 500000.00)
 ```
 
 ##### Visualizar dados

@@ -7,10 +7,11 @@ class DatabaseService:
     
     def __init__(self):
         self.connection = None
+        oracledb.defaults.config_dir = None
     
     def test_connection(self, user: str, password: str, dsn: str) -> Tuple[bool, str]:
         try:
-            connection = oracledb.connect(user=user, password=password, dsn=dsn)
+            connection = oracledb.connect(user=user, password=password, dsn=dsn, mode=oracledb.AUTH_MODE_DEFAULT)
             connection.close()
             return True, "Conexão realizada com sucesso"
         
@@ -20,6 +21,36 @@ class DatabaseService:
         
         except Exception as e:
             return False, str(e)
+        
+    def test_multiple_dsn_formats(self, user: str, password: str, dsn: str):
+        
+        if ':' in dsn and '/' in dsn:
+            host_port, service = dsn.split('/', 1)
+            host, port = host_port.split(':', 1)
+            port = int(port)
+        else:
+            return False, "Formato de DSN inválido"
+        
+        dsn_formats = [
+            dsn,
+            f"{host}:{port}/{service}", 
+            f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})(PORT={port}))(CONNECT_DATA=(SERVICE_NAME={service})))",
+            f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})(PORT={port}))(CONNECT_DATA=(SID={service})))", 
+        ]
+
+        print(dsn_formats)
+        
+        for i, dsn_format in enumerate(dsn_formats):
+            try:
+                print(f"Tentando DSN {i+1}: {dsn_format}")
+                connection = oracledb.connect(user=user, password=password, dsn=dsn_format)
+                connection.close()
+                return True, f"Sucesso com formato {i+1}: {dsn_format}"
+            except oracledb.Error as e:
+                print(f"Falha no formato {i+1}: {e}")
+                continue
+        
+        return False, "Nenhum formato de DSN funcionou"
     
     def connect(self, user: str, password: str, dsn: str) -> Tuple[bool, Union[Any, str]]:
         try:

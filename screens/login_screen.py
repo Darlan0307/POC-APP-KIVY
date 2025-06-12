@@ -91,6 +91,10 @@ class LoginScreen(Screen):
         test_button = Button(text='Testar Conexão')
         test_button.bind(on_press=self.test_connection)
         button_layout.add_widget(test_button)
+
+        test_dns_button = Button(text='Testar Formato DSN')
+        test_dns_button.bind(on_press=self.test_connection_multiple_dsn)
+        button_layout.add_widget(test_dns_button)
         
         return button_layout
     
@@ -118,6 +122,22 @@ class LoginScreen(Screen):
         connection_data = self._get_connection_data()
         
         success, message = self.db_service.test_connection(**connection_data)
+        
+        if success:
+            self.status_label.text = 'Conexão OK! ✓'
+            show_popup('Sucesso', 'Conexão realizada com sucesso!')
+        else:
+            self.status_label.text = f'Erro na conexão: {message}'
+            show_popup('Erro de Conexão', f'Não foi possível conectar:\n{message}')
+
+    def test_connection_multiple_dsn(self, instance):
+        if not self._validate_fields():
+            return
+        
+        self.status_label.text = 'Testando conexão...'
+        connection_data = self._get_connection_data()
+        
+        success, message = self.db_service.test_multiple_dsn_formats(**connection_data)
         
         if success:
             self.status_label.text = 'Conexão OK! ✓'
