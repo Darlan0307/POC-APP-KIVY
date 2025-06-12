@@ -29,7 +29,8 @@ Nesse projeto estou realizando uma POC para testar a criação de uma aplicaçã
 
 ```bash
 python3 -m venv venv
-source venv/bin/activate
+source venv/bin/activate # linux
+venv\Scripts\activate # windows
 ```
 
 ##### Instalar dependências
@@ -38,7 +39,7 @@ source venv/bin/activate
  pip install -r requirements.txt
 ```
 
-##### Rodar o banco de testes
+##### Rodar o banco de testes caso não tenha
 
 ```bash
  docker run -d \
