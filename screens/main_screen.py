@@ -20,6 +20,26 @@ class MainScreen(Screen):
         self.db_host = ''
         self._is_executing = False
         self._build_interface()
+
+
+    def _run_async_task(self, coro):
+        def run_in_thread():
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(coro)
+            except Exception as e:
+                Clock.schedule_once(
+                    lambda dt: show_popup('Erro', f'Erro interno: {str(e)}'), 
+                    0
+                )
+            finally:
+                loop.close()
+        
+        import threading
+        thread = threading.Thread(target=run_in_thread)
+        thread.daemon = True
+        thread.start()
     
     def _build_interface(self):
         main_layout = BoxLayout(orientation='vertical', padding=20, spacing=10)
@@ -106,19 +126,29 @@ class MainScreen(Screen):
         if not query:
             show_popup('Erro', 'Digite uma consulta SQL')
             return
-
-        asyncio.create_task(self.execute_query_async(query))
+        self._run_async_task(self.execute_query_async(query))
     
     async def execute_query_async(self, query: str):
         try:
             self._is_executing = True
+
+            Clock.schedule_once(
+                lambda dt: setattr(self.result_label, 'text', 'Executando consulta...'), 
+                0
+            )
             
             success, result = await self.db_service.execute_query(query)
             
             if success:
-                self.result_label.text = result
+                Clock.schedule_once(
+                    lambda dt: setattr(self.result_label, 'text', result), 
+                    0
+                )
             else:
-                self.result_label.text = f'Erro SQL: {result}'
+                Clock.schedule_once(
+                    lambda dt: setattr(self.result_label, 'text', f'Erro SQL: {result}'), 
+                    0
+                )
                 Clock.schedule_once(
                     lambda dt: show_popup('Erro SQL', result), 
                     0
@@ -138,7 +168,7 @@ class MainScreen(Screen):
             return
         
         if self.connection:
-            asyncio.create_task(self.disconnect_async())
+            self._run_async_task(self.disconnect_async())
         else:
             self.manager.current = 'login'
     

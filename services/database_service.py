@@ -26,7 +26,7 @@ class DatabaseService:
                     lambda: oracledb.connect(user=user, password=password, dsn=dsn_format)
                 )
 
-                await asyncio.get_event_loop().run_in_executor(None, connection.close)
+                connection.close()
                 return True, "Conexão realizada com sucesso"
             except oracledb.Error as e:
                 logger.error(f"Erro Oracle ao testar conexão com formato {i+1}: {dsn_format} - {str(e)}")
@@ -125,7 +125,7 @@ class DatabaseService:
     def is_connected(self) -> bool:
         return self.connection is not None
     
-    def get_dsn_formats(self,dsn: str) -> Tuple[List[str], None]:
+    def get_dsn_formats(self,dsn: str) -> List[str] | None:
         if ':' in dsn and '/' in dsn:
             host_port, service = dsn.split('/', 1)
             host, port = host_port.split(':', 1)

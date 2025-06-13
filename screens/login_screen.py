@@ -21,9 +21,11 @@ class LoginScreen(Screen):
         self.cmd_host = cmd_host
         self._auto_login_done = False
         self._is_connecting = False
+        self._event_loop = None
         self._build_interface()
     
     def on_enter(self):
+        self._setup_event_loop()
         if (self.cmd_user and self.cmd_password and self.cmd_host and not self._auto_login_done):
             self.user_input.text = self.cmd_user
             self.password_input.text = self.cmd_password
@@ -32,7 +34,33 @@ class LoginScreen(Screen):
             Clock.schedule_once(self._delayed_auto_login, 0)
 
     def _delayed_auto_login(self, dt):
-        asyncio.create_task(self.connect_to_database_async())
+        self._run_async_task(self.connect_to_database_async())
+    
+    def _run_async_task(self, coro):
+        def run_in_thread():
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(coro)
+            except Exception as e:
+                Clock.schedule_once(
+                    lambda dt: show_popup('Erro', f'Erro interno: {str(e)}'), 
+                    0
+                )
+            finally:
+                loop.close()
+        
+        import threading
+        thread = threading.Thread(target=run_in_thread)
+        thread.daemon = True
+        thread.start()
+
+    def _setup_event_loop(self):
+        try:
+            self._event_loop = asyncio.get_event_loop()
+        except RuntimeError:
+            self._event_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._event_loop)
     
     def _build_interface(self):
         main_layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
@@ -129,31 +157,13 @@ class LoginScreen(Screen):
         }
     
     def test_connection(self, instance):
-        """Wrapper síncrono para o teste de conexão assíncrono"""
         if self._is_connecting:
             return
         
         if not self._validate_fields():
             return
         
-        # Executa o teste de forma assíncrona
-        asyncio.create_task(self.test_connection_async())
-    
-    async def test_connection_async(self, instance):
-        if not self._validate_fields():
-            return
-        
-        self.status_label.text = 'Testando conexão...'
-        connection_data = self._get_connection_data()
-        
-        success, message = self.db_service.test_connection(**connection_data)
-        
-        if success:
-            self.status_label.text = 'Conexão OK! ✓'
-            show_popup('Sucesso', 'Conexão realizada com sucesso!')
-        else:
-            self.status_label.text = f'Erro na conexão: {message}'
-            show_popup('Erro de Conexão', f'Não foi possível conectar:\n{message}')
+        self._run_async_task(self.test_connection_async())
     
     async def test_connection_async(self):
         try:
@@ -191,8 +201,7 @@ class LoginScreen(Screen):
         
         if not self._validate_fields():
             return
-
-        asyncio.create_task(self.connect_to_database_async())
+        self._run_async_task(self.connect_to_database_async())
 
     async def connect_to_database_async(self):
         try:
