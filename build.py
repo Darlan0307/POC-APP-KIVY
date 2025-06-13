@@ -19,6 +19,7 @@ def build_executable():
         "--add-data=screens:screens",
         "--add-data=utils:utils",
         "--add-data=widgets:widgets",
+        "--add-data=instantclient:instantclient",
         "--hidden-import=uuid",
         "--hidden-import=secrets",
         "--hidden-import=cryptography.hazmat.primitives.kdf.pbkdf2",
