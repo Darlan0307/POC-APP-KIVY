@@ -29,7 +29,7 @@ REM
 echo 📋 Executando comando PyInstaller...
 echo.
 
-python -m PyInstaller --onefile --windowed --name=OracleDBManager --add-data="services;services" --add-data="screens;screens" --add-data="utils;utils" --add-data="instantclient;instantclient" --hidden-import=uuid --hidden-import=cryptography.hazmat.primitives.kdf.pbkdf2 --hidden-import=cryptography.x509 main.py
+python -m PyInstaller --onefile --windowed --name=OracleDBManager --add-data="services;services" --add-data="screens;screens" --add-data="utils;utils" --add-data="instantclient;instantclient" --add-data="*.kv;." --hidden-import=uuid --hidden-import=cryptography.hazmat.primitives.kdf.pbkdf2 --hidden-import=cryptography.x509 main.py
 
 REM
 if %ERRORLEVEL% equ 0 (

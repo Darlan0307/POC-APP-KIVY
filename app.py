@@ -1,9 +1,14 @@
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager
+from kivy.lang import Builder
 
 from screens.login_screen import LoginScreen
 from screens.main_screen import MainScreen
 
+from utils.resource_path import resource_path
+
+kv_file = resource_path('app.kv')
+Builder.load_file(kv_file)
 class OracleApp(App):
     def __init__(self, cmd_user=None, cmd_password=None, cmd_host=None, **kwargs):
         super().__init__(**kwargs)
@@ -23,7 +28,6 @@ class OracleApp(App):
         sm.add_widget(MainScreen(name='main'))
         
         sm.current = 'login'
-            
         
         return sm
     

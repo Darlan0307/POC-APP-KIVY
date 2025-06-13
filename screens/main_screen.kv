@@ -1,0 +1,151 @@
+#:kivy 2.0.0
+
+<MainScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(15)
+        
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(50)
+            spacing: dp(10)
+            
+            canvas.before:
+                Color:
+                    rgba: 0.95, 0.95, 0.95, 1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [dp(8)]
+            
+            Label:
+                id: connection_info
+                text: 'Não conectado'
+                font_size: sp(16)
+                color: 0.2, 0.3, 0.5, 1
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+                padding: dp(15), dp(10)
+                
+            Button:
+                text: 'Desconectar'
+                size_hint_x: None
+                width: dp(120)
+                font_size: sp(14)
+                background_color: 0.8, 0.3, 0.3, 1
+                color: 1, 1, 1, 1
+                on_press: root.disconnect()
+                canvas.before:
+                    Color:
+                        rgba: self.background_color if self.state == 'normal' else (0.7, 0.25, 0.25, 1)
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(5)]
+        
+        Label:
+            text: 'Oracle Database Manager'
+            size_hint_y: None
+            height: dp(60)
+            font_size: sp(24)
+            bold: True
+            color: 0.2, 0.3, 0.5, 1
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: dp(10)
+            size_hint_y: None
+            height: dp(220)
+            
+            Label:
+                text: 'Consulta SQL:'
+                size_hint_y: None
+                height: dp(30)
+                font_size: sp(16)
+                bold: True
+                color: 0.3, 0.3, 0.3, 1
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+            
+            TextInput:
+                id: query_input
+                hint_text: 'Digite sua consulta SQL aqui...\n\nExemplo:\nSELECT * FROM DUAL'
+                multiline: True
+                size_hint_y: None
+                height: dp(150)
+                font_size: sp(14)
+                padding: dp(10)
+                background_color: 0.98, 0.98, 0.98, 1
+                cursor_color: 0.2, 0.3, 0.5, 1
+                
+            
+            Button:
+                text: 'Executar Consulta'
+                size_hint_y: None
+                height: dp(40)
+                font_size: sp(16)
+                bold: True
+                background_color: 0.2, 0.6, 0.2, 1
+                color: 1, 1, 1, 1
+                on_press: root.execute_query()
+                canvas.before:
+                    Color:
+                        rgba: self.background_color if self.state == 'normal' else (0.15, 0.5, 0.15, 1)
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(5)]
+        
+        Widget:
+            size_hint_y: None
+            height: dp(1)
+            canvas:
+                Color:
+                    rgba: 0.8, 0.8, 0.8, 1
+                Line:
+                    points: self.x, self.center_y, self.right, self.center_y
+                    width: 1
+        
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: dp(5)
+            
+            Label:
+                text: 'Resultados:'
+                size_hint_y: None
+                height: dp(30)
+                font_size: sp(16)
+                bold: True
+                color: 0.3, 0.3, 0.3, 1
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
+            
+            ScrollView:
+                do_scroll_x: True
+                do_scroll_y: True
+                bar_width: dp(10)
+                scroll_type: ['bars', 'content']
+                
+                Label:
+                    id: result_label
+                    text: 'Resultado das consultas aparecerá aqui\n\nDicas:\n• Use queries simples como "SELECT * FROM user_tables" para listar tabelas\n• Limite resultados com ROWNUM para consultas grandes\n• Consulte o dicionário de dados Oracle para explorar a estrutura'
+                    text_size: self.width, None
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(20)
+                    halign: 'left'
+                    valign: 'top'
+                    color: 0.4, 0.4, 0.4, 1
+                    font_size: sp(12)
+                    padding: dp(10), dp(10)
+                    markup: True
+            
+        
+        

@@ -1,0 +1,145 @@
+#:kivy 2.0.0
+
+<LoginScreen>:
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None
+            size: 700, 500
+           
+
+            Label:
+                text: 'Conexão Oracle Database'
+                font_size: sp(28)
+                bold: True
+                color: 0.2, 0.3, 0.5, 1
+                size_hint_y: None
+                height: dp(80)
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+            
+            GridLayout:
+                cols: 2
+                spacing: dp(10)
+                size_hint: (0.7,0.2)
+                
+                Label:
+                    text: 'Usuário:'
+                    size_hint_y: None
+                    height: dp(40)
+                    text_size: self.size
+                    halign: 'right'
+                    valign: 'middle'
+                    color: 0.3, 0.3, 0.3, 1
+                    
+                TextInput:
+                    id: user_input
+                    multiline: False
+                    size_hint_y: None
+                    height: dp(40)
+                    hint_text: 'Digite o usuário do banco'
+                    font_size: sp(14)
+                    padding: dp(10), dp(10)
+                    background_color: 0.98, 0.98, 0.98, 1
+                    cursor_color: 0.2, 0.3, 0.5, 1
+                    selection_color: 0.7, 0.8, 0.9, 0.5
+                
+                Label:
+                    text: 'Senha:'
+                    size_hint_y: None
+                    height: dp(40)
+                    text_size: self.size
+                    halign: 'right'
+                    valign: 'middle'
+                    color: 0.3, 0.3, 0.3, 1
+                    
+                TextInput:
+                    id: password_input
+                    multiline: False
+                    password: True
+                    size_hint_y: None
+                    height: dp(40)
+                    hint_text: 'Digite a senha'
+                    font_size: sp(14)
+                    padding: dp(10), dp(10)
+                    background_color: 0.98, 0.98, 0.98, 1
+                    cursor_color: 0.2, 0.3, 0.5, 1
+                    selection_color: 0.7, 0.8, 0.9, 1
+                
+                Label:
+                    text: 'Host:'
+                    size_hint_y: None
+                    height: dp(40)
+                    text_size: self.size
+                    halign: 'right'
+                    valign: 'middle'
+                    color: 0.3, 0.3, 0.3, 1
+                    
+                TextInput:
+                    id: host_input
+                    multiline: False
+                    size_hint_y: None
+                    height: dp(40)
+                    hint_text: 'Ex: localhost:1521/XE'
+                    text: 'localhost:1521/XE'
+                    font_size: sp(14)
+                    padding: dp(10), dp(10)
+                    background_color: 0.98, 0.98, 0.98, 1
+                    cursor_color: 0.2, 0.3, 0.5, 1
+                    selection_color: 0.7, 0.8, 0.9, 1
+            
+            Widget:
+                size_hint_y: 0.3
+            
+            BoxLayout:
+                orientation: 'horizontal'
+                spacing: dp(15)
+                size_hint_y: None
+                height: dp(50)
+                
+                Button:
+                    text: 'Conectar'
+                    font_size: sp(16)
+                    bold: True
+                    background_color: 0.2, 0.6, 0.2, 1
+                    color: 1, 1, 1, 1
+                    on_press: root.connect_to_database()
+                    canvas.before:
+                        Color:
+                            rgba: self.background_color if self.state == 'normal' else (0.15, 0.5, 0.15, 1)
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [dp(5)]
+
+                Button:
+                    text: 'Testar Conexão'
+                    font_size: sp(16)
+                    background_color: 0.3, 0.5, 0.8, 1
+                    color: 1, 1, 1, 1
+                    on_press: root.test_connection()
+                    canvas.before:
+                        Color:
+                            rgba: self.background_color if self.state == 'normal' else (0.25, 0.4, 0.7, 1)
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [dp(5)]
+            
+            Label:
+                id: status_label
+                text: 'Preencha os dados para conectar'
+                size_hint_y: None
+                height: dp(40)
+                color: 0.4, 0.4, 0.4, 1
+                font_size: sp(14)
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+            
+            Widget:
+                size_hint_y: 0.2
