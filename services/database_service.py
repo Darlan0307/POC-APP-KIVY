@@ -1,4 +1,5 @@
 import oracledb
+import asyncio
 from typing import Tuple, Union, Any, List
 from utils.helpers import is_select_query
 from utils.logger import logger
@@ -10,7 +11,7 @@ class DatabaseService:
     def __init__(self):
         self.connection = None
     
-    def test_connection(self, user: str, password: str, dsn: str) -> Tuple[bool, str]:
+    async def test_connection(self, user: str, password: str, dsn: str) -> Tuple[bool, str]:
         
         dsn_formats = self.get_dsn_formats(dsn)
 
@@ -19,8 +20,13 @@ class DatabaseService:
 
         for i, dsn_format in enumerate(dsn_formats):
             try:
-                connection = oracledb.connect(user=user, password=password, dsn=dsn_format)
-                connection.close()
+                
+                connection = await asyncio.get_event_loop().run_in_executor(
+                    None, 
+                    lambda: oracledb.connect(user=user, password=password, dsn=dsn_format)
+                )
+
+                await asyncio.get_event_loop().run_in_executor(None, connection.close)
                 return True, "Conexão realizada com sucesso"
             except oracledb.Error as e:
                 logger.error(f"Erro Oracle ao testar conexão com formato {i+1}: {dsn_format} - {str(e)}")
@@ -28,7 +34,7 @@ class DatabaseService:
         
         return False, "Nenhum formato de DSN funcionou"
     
-    def connect(self, user: str, password: str, dsn: str) -> Tuple[bool, Union[Any, str]]:
+    async def connect(self, user: str, password: str, dsn: str) -> Tuple[bool, Union[Any, str]]:
         dsn_formats = self.get_dsn_formats(dsn)
 
         if not dsn_formats:
@@ -36,7 +42,10 @@ class DatabaseService:
         
         for i, dsn_format in enumerate(dsn_formats):
             try:
-                self.connection = oracledb.connect(user=user, password=password, dsn=dsn_format)
+                self.connection = await asyncio.get_event_loop().run_in_executor(
+                    None, 
+                    lambda: oracledb.connect(user=user, password=password, dsn=dsn_format)
+                )
                 return True, self.connection
             except oracledb.Error as e:
                 logger.error(f"Erro Oracle ao tentar conectar com formato {i+1}: {dsn_format} - {str(e)}")
@@ -47,37 +56,48 @@ class DatabaseService:
     def set_connection(self, connection):
         self.connection = connection
     
-    def execute_query(self, query: str) -> Tuple[bool, str]:
+    async def execute_query(self, query: str) -> Tuple[bool, str]:
         if not self.connection:
             return False, "Não há conexão ativa com o banco"
         
+        cursor = None
         try:
-            cursor = self.connection.cursor()
-            cursor.execute(query)
+            def _execute_query():
+                nonlocal cursor
+                cursor = self.connection.cursor()
+                cursor.execute(query)
+                
+                if is_select_query(query):
+                    results = cursor.fetchall()
+                    return results
+                else:
+                    self.connection.commit()
+                    return cursor.rowcount
+            
+            result = await asyncio.get_event_loop().run_in_executor(None, _execute_query)
             
             if is_select_query(query):
-                results = cursor.fetchall()
-                if results:
-                    result_text = self._format_select_results(results)
+                if result:
+                    result_text = self._format_select_results(result)
                     return True, f'Resultado:\n{result_text}'
                 else:
                     return True, 'Consulta executada - Nenhum resultado retornado'
             else:
-                self.connection.commit()
-                return True, f'Comando executado com sucesso\nLinhas afetadas: {cursor.rowcount}'
+                return True, f'Comando executado com sucesso\nLinhas afetadas: {result}'
         
         except oracledb.Error as e:
             error_msg = str(e).split('\n')[0]
-            logger.error(f"Erro Oracle ao tentar executar query:: {str(e)}")
+            logger.error(f"Erro Oracle ao tentar executar query: {str(e)}")
             return False, error_msg
         
         except Exception as e:
-            logger.error(f"Erro Oracle ao tentar executar query:: {str(e)}")
+            logger.error(f"Erro Oracle ao tentar executar query: {str(e)}")
             return False, str(e)
         
         finally:
-            if 'cursor' in locals():
-                cursor.close()
+            if cursor:
+                await asyncio.get_event_loop().run_in_executor(None, cursor.close)
+    
     
     def _format_select_results(self, results) -> str:
         formatted_results = []
@@ -92,12 +112,13 @@ class DatabaseService:
         
         return '\n'.join(formatted_results)
     
-    def disconnect(self):
+    async def disconnect(self):
         if self.connection:
             try:
-                self.connection.close()
-            except:
-                pass 
+                await asyncio.get_event_loop().run_in_executor(None, self.connection.close)
+            except Exception as e:
+                logger.error(f"Erro ao desconectar: {str(e)}")
+                pass
             finally:
                 self.connection = None
     

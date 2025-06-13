@@ -1,8 +1,10 @@
+import asyncio
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.screenmanager import Screen
+from kivy.clock import Clock
 
 from services.database_service import DatabaseService
 from utils.helpers import show_popup
@@ -16,6 +18,7 @@ class MainScreen(Screen):
         self.connection = None
         self.db_user = ''
         self.db_host = ''
+        self._is_executing = False
         self._build_interface()
     
     def _build_interface(self):
@@ -92,6 +95,9 @@ class MainScreen(Screen):
         self.connection_info.text = f'Conectado como: {user}@{host}'
     
     def execute_query(self, instance):
+        if self._is_executing:
+            return
+        
         if not self.connection:
             show_popup('Erro', 'Não há conexão ativa com o banco')
             return
@@ -100,18 +106,51 @@ class MainScreen(Screen):
         if not query:
             show_popup('Erro', 'Digite uma consulta SQL')
             return
-        
-        success, result = self.db_service.execute_query(query)
-        
-        if success:
-            self.result_label.text = result
-        else:
-            self.result_label.text = f'Erro SQL: {result}'
-            show_popup('Erro SQL', result)
+
+        asyncio.create_task(self.execute_query_async(query))
     
+    async def execute_query_async(self, query: str):
+        try:
+            self._is_executing = True
+            
+            success, result = await self.db_service.execute_query(query)
+            
+            if success:
+                self.result_label.text = result
+            else:
+                self.result_label.text = f'Erro SQL: {result}'
+                Clock.schedule_once(
+                    lambda dt: show_popup('Erro SQL', result), 
+                    0
+                )
+                
+        except Exception as e:
+            error_msg = f'Erro inesperado: {str(e)}'
+            Clock.schedule_once(
+                lambda dt: show_popup('Erro', error_msg), 
+                0
+            )
+        finally:
+            self._is_executing = False
+
     def disconnect(self, instance):
-        if self.connection:
-            self.db_service.disconnect()
-            self.connection = None
+        if self._is_executing:
+            return
         
-        self.manager.current = 'login'
+        if self.connection:
+            asyncio.create_task(self.disconnect_async())
+        else:
+            self.manager.current = 'login'
+    
+    async def disconnect_async(self):
+        try:
+            await self.db_service.disconnect()
+            self.connection = None
+            
+            Clock.schedule_once(lambda dt: setattr(self.manager, 'current', 'login'), 0)
+            
+        except Exception as e:
+            Clock.schedule_once(
+                lambda dt: show_popup('Erro', f'Erro ao desconectar: {str(e)}'), 
+                0
+            )

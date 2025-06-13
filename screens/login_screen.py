@@ -1,3 +1,4 @@
+import asyncio
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -19,6 +20,7 @@ class LoginScreen(Screen):
         self.cmd_password = cmd_password
         self.cmd_host = cmd_host
         self._auto_login_done = False
+        self._is_connecting = False
         self._build_interface()
     
     def on_enter(self):
@@ -30,7 +32,7 @@ class LoginScreen(Screen):
             Clock.schedule_once(self._delayed_auto_login, 0)
 
     def _delayed_auto_login(self, dt):
-        self.connect_to_database(None)
+        asyncio.create_task(self.connect_to_database_async())
     
     def _build_interface(self):
         main_layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
@@ -127,6 +129,17 @@ class LoginScreen(Screen):
         }
     
     def test_connection(self, instance):
+        """Wrapper síncrono para o teste de conexão assíncrono"""
+        if self._is_connecting:
+            return
+        
+        if not self._validate_fields():
+            return
+        
+        # Executa o teste de forma assíncrona
+        asyncio.create_task(self.test_connection_async())
+    
+    async def test_connection_async(self, instance):
         if not self._validate_fields():
             return
         
@@ -141,25 +154,81 @@ class LoginScreen(Screen):
         else:
             self.status_label.text = f'Erro na conexão: {message}'
             show_popup('Erro de Conexão', f'Não foi possível conectar:\n{message}')
-
+    
+    async def test_connection_async(self):
+        try:
+            self._is_connecting = True
+            self.status_label.text = 'Testando conexão...'
+            
+            connection_data = self._get_connection_data()
+            success, message = await self.db_service.test_connection(**connection_data)
+            
+            if success:
+                self.status_label.text = 'Conexão OK! ✓'
+                Clock.schedule_once(
+                    lambda dt: show_popup('Sucesso', 'Conexão realizada com sucesso!'), 
+                    0
+                )
+            else:
+                self.status_label.text = f'Erro na conexão: {message}'
+                Clock.schedule_once(
+                    lambda dt: show_popup('Erro de Conexão', f'Não foi possível conectar:\n{message}'), 
+                    0
+                )
+                
+        except Exception as e:
+            error_msg = f'Erro inesperado: {str(e)}'
+            Clock.schedule_once(
+                lambda dt: show_popup('Erro', error_msg), 
+                0
+            )
+        finally:
+            self._is_connecting = False
+    
     def connect_to_database(self, instance):
-        if not self._validate_fields():
+        if self._is_connecting:
             return
         
-        self.status_label.text = 'Conectando...'
-        connection_data = self._get_connection_data()
-        
-        success, result = self.db_service.connect(**connection_data)
-        
-        if success:
-            main_screen = self.manager.get_screen('main')
-            main_screen.set_connection_info(
-                connection_data['user'], 
-                connection_data['dsn'], 
-                result
-            )
-            self.manager.current = 'main'
+        if not self._validate_fields():
+            return
+
+        asyncio.create_task(self.connect_to_database_async())
+
+    async def connect_to_database_async(self):
+        try:
+            self._is_connecting = True
+            self.status_label.text = 'Conectando...'
             
-        else:
-            self.status_label.text = f'Erro na conexão: {result}'
-            show_popup('Erro de Conexão', f'Não foi possível conectar:\n{result}')
+            connection_data = self._get_connection_data()
+            success, result = await self.db_service.connect(**connection_data)
+            
+            if success:
+                def switch_to_main(dt):
+                    main_screen = self.manager.get_screen('main')
+                    main_screen.set_connection_info(
+                        connection_data['user'], 
+                        connection_data['dsn'], 
+                        result
+                    )
+                    self.manager.current = 'main'
+                
+                Clock.schedule_once(switch_to_main, 0)
+                
+            else:
+                self.status_label.text = f'Erro na conexão: {result}'
+                Clock.schedule_once(
+                    lambda dt: show_popup('Erro de Conexão', f'Não foi possível conectar:\n{result}'), 
+                    0
+                )
+                
+        except Exception as e:
+            error_msg = f'Erro inesperado: {str(e)}'
+            Clock.schedule_once(
+                lambda dt: show_popup('Erro', error_msg), 
+                0
+            )
+        finally:
+            self._is_connecting = False
+    
+    def on_leave(self):
+        self._is_connecting = False
