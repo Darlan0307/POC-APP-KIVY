@@ -23,7 +23,7 @@ Nesse projeto estou realizando uma POC para testar a criação de uma aplicaçã
 
 ### Etapas para executar
 
-> Necessário ter o [python3](https://www.python.org/downloads/) e o [docker](https://docs.docker.com/engine/install/) instalados
+> Necessário ter o [python3](https://www.python.org/downloads/)
 
 ##### Criar e ativar ambiente virtual
 
@@ -39,6 +39,36 @@ venv\Scripts\activate # windows
  pip install -r requirements.txt
 ```
 
+<details>
+  <summary>Ambiente Windows</summary>
+
+##### Rodar o aplicativo
+
+```bash
+python main.py
+```
+
+---
+
+##### Criando arquivo de execução do app
+
+```bash
+./build.bat # arquivo criado para automatizar o processo
+```
+
+</details>
+
+<br/>
+
+<details>
+  <summary>Ambiente Linux</summary>
+
+##### Rodar o aplicativo
+
+```bash
+python3 main.py
+```
+
 ##### Rodar o banco de testes caso não tenha
 
 ```bash
@@ -50,21 +80,6 @@ venv\Scripts\activate # windows
  gvenzl/oracle-free:23-slim
 ```
 
-##### Verificar se o banco está pronto para uso
-
-```bash
-docker logs -f oracle-free
-
-# Deve aparecer a mensagem:
-# DATABASE IS READY TO USE!
-```
-
-##### Rodar o aplicativo
-
-```bash
-python3 main.py
-```
-
 ##### Informações de conexão
 
 - Usuário: system
@@ -73,49 +88,13 @@ python3 main.py
 
 ---
 
-### Criando arquivo de execução do app
-
-#### Windows
-
-```bash
-./build.bat # arquivo criado para automatizar o processo
-```
-
-#### Linux
+##### Criando arquivo de execução do app
 
 ```bash
 pthon3 build.py # arquivo criado para automatizar o processo
 ```
 
----
-
-### Exemplos de scripts SQL
-
-##### Criar tabela se não existir
-
-```sql
-CREATE TABLE departamentos (
-id NUMBER PRIMARY KEY,
-nome VARCHAR2(50) NOT NULL,
-gerente VARCHAR2(100),
-orcamento NUMBER(12,2)
-)
-```
-
-##### Inserir dados
-
-```sql
-
-INSERT INTO departamentos VALUES (1,'TI', 'João Silva', 500000.00)
-```
-
-##### Visualizar dados
-
-```sql
-SELECT * FROM departamentos
-```
-
-#### Caso queira apagar o banco
+##### Caso queira apagar o banco
 
 ```bash
 docker stop oracle-free
@@ -138,3 +117,5 @@ sudo apt-get install libmtdev-dev
 ```bash
 sudo apt-get install xclip xsel
 ```
+
+</details>

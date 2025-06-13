@@ -4,6 +4,7 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.screenmanager import Screen
 from kivy.uix.gridlayout import GridLayout
+from kivy.clock import Clock
 
 from services.database_service import DatabaseService
 from utils.helpers import show_popup, validate_required_field
@@ -11,10 +12,25 @@ from utils.helpers import show_popup, validate_required_field
 
 class LoginScreen(Screen):
     
-    def __init__(self, **kwargs):
+    def __init__(self, cmd_user=None, cmd_password=None, cmd_host=None, **kwargs):
         super().__init__(**kwargs)
         self.db_service = DatabaseService()
+        self.cmd_user = cmd_user
+        self.cmd_password = cmd_password
+        self.cmd_host = cmd_host
+        self._auto_login_done = False
         self._build_interface()
+    
+    def on_enter(self):
+        if (self.cmd_user and self.cmd_password and self.cmd_host and not self._auto_login_done):
+            self.user_input.text = self.cmd_user
+            self.password_input.text = self.cmd_password
+            self.host_input.text = self.cmd_host
+            self._auto_login_done = True
+            Clock.schedule_once(self._delayed_auto_login, 0)
+
+    def _delayed_auto_login(self, dt):
+        self.connect_to_database(None)
     
     def _build_interface(self):
         main_layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
@@ -69,8 +85,8 @@ class LoginScreen(Screen):
             multiline=False,
             size_hint_y=None,
             height=40,
-            hint_text='Ex: localhost:1521/FREE',
-            text='localhost:1521/FREE'
+            hint_text='Ex: localhost:1521/XE',
+            text='localhost:1521/XE'
         )
         form_layout.add_widget(self.host_input)
         
@@ -91,10 +107,6 @@ class LoginScreen(Screen):
         test_button = Button(text='Testar Conexão')
         test_button.bind(on_press=self.test_connection)
         button_layout.add_widget(test_button)
-
-        test_dns_button = Button(text='Testar Formato DSN')
-        test_dns_button.bind(on_press=self.test_connection_multiple_dsn)
-        button_layout.add_widget(test_dns_button)
         
         return button_layout
     
@@ -130,22 +142,6 @@ class LoginScreen(Screen):
             self.status_label.text = f'Erro na conexão: {message}'
             show_popup('Erro de Conexão', f'Não foi possível conectar:\n{message}')
 
-    def test_connection_multiple_dsn(self, instance):
-        if not self._validate_fields():
-            return
-        
-        self.status_label.text = 'Testando conexão...'
-        connection_data = self._get_connection_data()
-        
-        success, message = self.db_service.test_multiple_dsn_formats(**connection_data)
-        
-        if success:
-            self.status_label.text = 'Conexão OK! ✓'
-            show_popup('Sucesso', 'Conexão realizada com sucesso!')
-        else:
-            self.status_label.text = f'Erro na conexão: {message}'
-            show_popup('Erro de Conexão', f'Não foi possível conectar:\n{message}')
-    
     def connect_to_database(self, instance):
         if not self._validate_fields():
             return
@@ -162,8 +158,8 @@ class LoginScreen(Screen):
                 connection_data['dsn'], 
                 result
             )
-
             self.manager.current = 'main'
+            
         else:
             self.status_label.text = f'Erro na conexão: {result}'
             show_popup('Erro de Conexão', f'Não foi possível conectar:\n{result}')

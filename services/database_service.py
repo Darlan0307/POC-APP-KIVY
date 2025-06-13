@@ -1,70 +1,48 @@
 import oracledb
-from typing import Tuple, Union, Any
+from typing import Tuple, Union, Any, List
 from utils.helpers import is_select_query
 from utils.logger import logger
+from utils.get_oracle_client_path import get_oracle_client_path
 
+oracledb.init_oracle_client(lib_dir=get_oracle_client_path())
 class DatabaseService:
     
     def __init__(self):
         self.connection = None
-        oracledb.defaults.config_dir = None
     
     def test_connection(self, user: str, password: str, dsn: str) -> Tuple[bool, str]:
-        try:
-            connection = oracledb.connect(user=user, password=password, dsn=dsn, mode=oracledb.AUTH_MODE_DEFAULT)
-            connection.close()
-            return True, "Conexão realizada com sucesso"
         
-        except oracledb.Error as e:
-            error_msg = str(e).split('\n')[0]
-            logger.error(f"Erro Oracle ao testar conexão: {str(e)}")
-            return False, error_msg
-        
-        except Exception as e:
-            return False, str(e)
-        
-    def test_multiple_dsn_formats(self, user: str, password: str, dsn: str):
-        
-        if ':' in dsn and '/' in dsn:
-            host_port, service = dsn.split('/', 1)
-            host, port = host_port.split(':', 1)
-            port = int(port)
-        else:
+        dsn_formats = self.get_dsn_formats(dsn)
+
+        if not dsn_formats:
             return False, "Formato de DSN inválido"
-        
-        dsn_formats = [
-            dsn,
-            f"{host}:{port}/{service}", 
-            f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})(PORT={port}))(CONNECT_DATA=(SERVICE_NAME={service})))",
-            f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})(PORT={port}))(CONNECT_DATA=(SID={service})))", 
-        ]
-        
+
         for i, dsn_format in enumerate(dsn_formats):
             try:
-                print(f"Tentando DSN {i+1}: {dsn_format}")
                 connection = oracledb.connect(user=user, password=password, dsn=dsn_format)
                 connection.close()
-                return True, f"Sucesso com formato {i+1}: {dsn_format}"
+                return True, "Conexão realizada com sucesso"
             except oracledb.Error as e:
                 logger.error(f"Erro Oracle ao testar conexão com formato {i+1}: {dsn_format} - {str(e)}")
-                print(f"Falha no formato {i+1}: {e}")
                 continue
         
         return False, "Nenhum formato de DSN funcionou"
     
     def connect(self, user: str, password: str, dsn: str) -> Tuple[bool, Union[Any, str]]:
-        try:
-            self.connection = oracledb.connect(user=user, password=password, dsn=dsn)
-            return True, self.connection
+        dsn_formats = self.get_dsn_formats(dsn)
+
+        if not dsn_formats:
+            return False, "Formato de DSN inválido"
         
-        except oracledb.Error as e:
-            error_msg = str(e).split('\n')[0]
-            logger.error(f"Erro Oracle ao tentar conectar: {str(e)}")
-            return False, error_msg
-        
-        except Exception as e:
-            logger.error(f"Erro Oracle ao tentar conectar:: {str(e)}")
-            return False, str(e)
+        for i, dsn_format in enumerate(dsn_formats):
+            try:
+                self.connection = oracledb.connect(user=user, password=password, dsn=dsn_format)
+                return True, self.connection
+            except oracledb.Error as e:
+                logger.error(f"Erro Oracle ao tentar conectar com formato {i+1}: {dsn_format} - {str(e)}")
+                continue
+
+        return False, "Nenhum formato de DSN funcionou"
     
     def set_connection(self, connection):
         self.connection = connection
@@ -125,3 +103,19 @@ class DatabaseService:
     
     def is_connected(self) -> bool:
         return self.connection is not None
+    
+    def get_dsn_formats(self,dsn: str) -> Tuple[List[str], None]:
+        if ':' in dsn and '/' in dsn:
+            host_port, service = dsn.split('/', 1)
+            host, port = host_port.split(':', 1)
+            port = int(port)
+        else:
+            return None
+        
+        dsn_formats = [
+            dsn,
+            f"{host}:{port}/{service}", 
+            f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})(PORT={port}))(CONNECT_DATA=(SERVICE_NAME={service})))",
+            f"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={host})(PORT={port}))(CONNECT_DATA=(SID={service})))",
+        ]
+        return dsn_formats
